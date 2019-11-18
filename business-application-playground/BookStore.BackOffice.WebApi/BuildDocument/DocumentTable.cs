@@ -95,7 +95,7 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
                     // way would produce a table of empty rows because some books are skipped because of the given criteria
                     var sortCondition = context.Books.All(a => a.IsBestSeller == true);
 
-                    var tblRep = context.Books.Where(x => x.Id == bookId).Select(b => b).FirstOrDefault();
+                    var tblRep = context.Books.Where(x => x.Id == bookId).FirstOrDefault();
 
                     bookId++;
 
