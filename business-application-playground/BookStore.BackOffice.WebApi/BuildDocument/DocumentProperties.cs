@@ -5,13 +5,6 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
 {
     public class DocumentProperties
     {
-        private IPropertiesOfDataToInsert propertiesToInsert;
-
-        public DocumentProperties(IPropertiesOfDataToInsert propertiesToInsert)
-        {
-            this.propertiesToInsert = propertiesToInsert;
-        }
-
         public Paragraph PropertiesSetup()
         {
             var justification = new Justification() { Val = JustificationValues.Center };
@@ -25,7 +18,8 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
             var run = new Run();
             var text = new Text();
 
-            //text.Text = propertiesToInsert.HeaderCellNames.ToString();
+            // some rand text as Main Title
+            text.Text = "Book Invoice";
 
             run.Append(new RunProperties());
             run.Append(text);

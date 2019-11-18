@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using BookStore.BackOffice.WebApi.BookStoreProperties;
 using BookStore.BackOffice.WebApi.Models;
 using DocumentFormat.OpenXml;
@@ -21,11 +22,12 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
         {
             var table = SetupTableProperties();
 
-            //build data
-            var posX = propertiesToInsert.HeaderTitle.Count;
-            var posY = context.Books.Count() + 1;
-
-            propertiesToInsert.Data = new string[posX, posY];
+            // not to count context.. build and use of "BuildBookListBasedOnCondition()" returned count
+            propertiesToInsert.Data = new string
+                [
+                    propertiesToInsert.HeaderTitle.Count,
+                    context.Books.Count() + 1
+                ];
 
             //populate header section
             BuildDataHeader();
@@ -63,6 +65,13 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
             return table;
         }
 
+        private int BuildBookListBasedOnCondition()
+        {
+            // build a new property list of books to return based on conditional criteria
+            // return the list.count to build data property
+            return 0;
+        }
+
         private void BuildDataHeader()
         {
             for (int i = 0; i < propertiesToInsert.HeaderTitle.Count; i++)
@@ -81,33 +90,44 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
 
                 for (int posY = 0; posY < context.Books.Count() + 1; posY++)
                 {
+                    // sort conditional "BuildBookListBasedOnCondition()"
+                    // count failure need to check count based on the condition criteria aswell otherwise loops for ever and either
+                    // way would produce a table of empty rows because some books are skipped because of the given criteria
+                    var sortCondition = context.Books.All(a => a.IsBestSeller == true);
+
                     var tblRep = context.Books.Where(x => x.Id == bookId).Select(b => b).FirstOrDefault();
 
                     bookId++;
 
-                    if (tblRep == null)
+                    if (tblRep == null && posY - 1 > 0)
+                    {
+                        posY -= 1;
+
+                        continue;
+                    }
+                    else if (tblRep == null && posY - 1 <= 0)
                     {
                         posY = 0;
+
+                        continue;
                     }
-                    else
-                    {
-                        var value = tblRep.GetType()
-                            .GetProperties()
-                                .Where(a => a.Name == propertiesToInsert.HeaderTitle.ElementAt(posX).Value)
-                                    .Select(b => b.GetValue(tblRep, null))
-                                        .FirstOrDefault();
 
-                        var author = propertiesToInsert.HeaderTitle.ElementAt(posX).Value.ToLower();
+                    var value = tblRep.GetType()
+                        .GetProperties()
+                            .Where(a => a.Name == propertiesToInsert.HeaderTitle.ElementAt(posX).Value)
+                                .Select(b => b.GetValue(tblRep, null))
+                                    .FirstOrDefault();
 
-                        if (value != null && propertiesToInsert.HeaderTitle.ElementAt(posX).Value.ToLower() == "author")
-                            value = tblRep.Author.Firstname + " " + tblRep.Author.Lastname;
+                    var author = propertiesToInsert.HeaderTitle.ElementAt(posX).Value.ToLower();
 
-                        // Avoid broken doc in case the value is null
-                        if (value == null)
-                            value = "null";
+                    if (value != null && propertiesToInsert.HeaderTitle.ElementAt(posX).Value.ToLower() == "author")
+                        value = tblRep.Author.Firstname + " " + tblRep.Author.Lastname;
 
-                        propertiesToInsert.Data[posX, posY] = value.ToString();
-                    }
+                    // Avoid broken doc in case the value is null
+                    if (value == null)
+                        value = "null";
+
+                    propertiesToInsert.Data[posX, posY] = value.ToString();
                 }
             }
         }

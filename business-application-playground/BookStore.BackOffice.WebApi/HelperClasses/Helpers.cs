@@ -7,10 +7,12 @@ namespace BookStore.BackOffice.WebApi.HelperClasses
     public class Helpers : IHelpers
     {
         private IPropertiesOfDataToInsert propertiesToInsert;
+        private IBookDataProperty bookDataProperty;
 
-        public Helpers(IPropertiesOfDataToInsert propertiesToInsert)
+        public Helpers(IPropertiesOfDataToInsert propertiesToInsert, IBookDataProperty bookDataProperty)
         {
             this.propertiesToInsert = propertiesToInsert;
+            this.bookDataProperty = bookDataProperty;
         }
 
         public void ToDictionary(string[] headerTitles)
@@ -33,7 +35,7 @@ namespace BookStore.BackOffice.WebApi.HelperClasses
                     continue;
                 }
 
-                var value = propertiesToInsert.GetType().GetProperty(
+                var value = bookDataProperty.BookStore.GetType().GetProperty(
                             name.ToLower(),
                                 BindingFlags.IgnoreCase |
                                 BindingFlags.Public |
@@ -41,8 +43,6 @@ namespace BookStore.BackOffice.WebApi.HelperClasses
                                     .Name;
 
                 propertiesToInsert.HeaderTitle.Add(keyName, value);
-
-                // TODO: clean dictionary after its processing
             }
         }
 

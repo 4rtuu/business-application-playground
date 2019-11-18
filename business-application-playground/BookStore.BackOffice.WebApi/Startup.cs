@@ -30,6 +30,7 @@ namespace BookStore.BackOffice.WebApi
 
             services.AddDbContext<BookStoreDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("BookStoreDb")));
 
+            services.AddSingleton<IBookDataProperty, BookDataProperty>();
             services.AddSingleton<IPropertiesOfDataToInsert, PropertiesOfDataToInsert>();
             services.AddSingleton<IHelpers, Helpers>();
 
