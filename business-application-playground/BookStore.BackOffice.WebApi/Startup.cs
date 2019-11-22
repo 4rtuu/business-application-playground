@@ -1,7 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
-using BookStore.BackOffice.WebApi.BookStoreProperties;
+using BookStore.BackOffice.WebApi.BookStorePropertiesDto;
+using BookStore.BackOffice.WebApi.BuildDocument;
 using BookStore.BackOffice.WebApi.HelperClasses;
 using BookStore.BackOffice.WebApi.Models;
 using Microsoft.AspNetCore.Builder;
@@ -11,7 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace BookStore.BackOffice.WebApi
 {
@@ -31,8 +31,13 @@ namespace BookStore.BackOffice.WebApi
             services.AddDbContext<BookStoreDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("BookStoreDb")));
 
             services.AddSingleton<IBookDataProperty, BookDataProperty>();
-            services.AddSingleton<IPropertiesOfDataToInsert, PropertiesOfDataToInsert>();
-            services.AddSingleton<IHelpers, Helpers>();
+            services.AddScoped<IPropertiesOfData, PropertiesOfData>();
+            services.AddScoped<IHelpers, Helpers>();
+            services.AddScoped<DocumentData>();
+            services.AddScoped<DocumentProperties>();
+            services.AddScoped<DocumentTable>();
+            services.AddScoped<DocumentSorting>();
+            services.AddScoped<FilterModelDto>();
 
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
@@ -47,6 +52,7 @@ namespace BookStore.BackOffice.WebApi
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
+                c.DescribeAllEnumsAsStrings();
             });
         }
 

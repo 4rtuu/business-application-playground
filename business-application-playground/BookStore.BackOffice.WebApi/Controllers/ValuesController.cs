@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.IO;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
-using BookStore.BackOffice.WebApi.BookStoreProperties;
+using BookStore.BackOffice.WebApi.BookStorePropertiesDto;
 using BookStore.BackOffice.WebApi.BuildDocument;
 using BookStore.BackOffice.WebApi.Models;
-using BookStore.BackOffice.WebApi.HelperClasses;
 
 namespace BookStore.BackOffice.WebApi.Controllers
 {
@@ -18,62 +13,47 @@ namespace BookStore.BackOffice.WebApi.Controllers
     public class ValuesController : ControllerBase
     {
         private readonly BookStoreDbContext context;
-        private IPropertiesOfDataToInsert propertiesToInsert;
-        private IBookDataProperty bookDataProperty;
-        private IHelpers helpers;
+        private DocumentProperties docSettings;
 
-        public ValuesController(BookStoreDbContext context, IPropertiesOfDataToInsert propertiesToInsert, IBookDataProperty bookDataProperty, IHelpers helpers)
+        public ValuesController
+        (
+            BookStoreDbContext context,
+            DocumentProperties docSettings
+        )
         {
             this.context = context;
-            this.propertiesToInsert = propertiesToInsert;
-            this.bookDataProperty = bookDataProperty;
-            this.helpers = helpers;
+            this.docSettings = docSettings;
         }
 
         /// <summary>
-        /// Defaults { | "title", "author", "price", "isbestseller", "availablestock", | "shortdescription", "publicationyear" }
         /// Generate a docx file of provided titles that are expected.
         /// </summary>
         [HttpGet]
-        public IActionResult GenerateDocument([FromQuery] string[] titles)
+        public IActionResult GetDocument([FromQuery] FilterModelDto filter)
         {
+            var dateTime = DateTime.Now.ToString("dddd-dd-MMMM-yyyy-HH-mm-ss");
+
             using (var memory = new MemoryStream())
             {
-                using (var document = WordprocessingDocument.Create(memory, WordprocessingDocumentType.Document, true))
-                {
-                    propertiesToInsert.HeaderTitle = new Dictionary<string, string>();
+                docSettings.DocumentSetup(memory, filter);
 
-                    bookDataProperty.BookStore = new Book();
-
-                    helpers.ToDictionary(titles);
-
-                    document.AddMainDocumentPart();
-
-                    var props = new DocumentProperties();
-                    var paragraphProperties = props.PropertiesSetup();
-
-                    var table = new DocumentTable(context, propertiesToInsert);
-                    var rdyTable = table.TableSetup();
-
-                    var body = new Body();
-                    body.Append(paragraphProperties);
-                    body.Append(rdyTable);
-
-                    var doc = new Document();
-                    doc.Append(body);
-
-                    document.MainDocumentPart.Document = doc;
-
-                    document.Close();
-                }
-
-                return File(memory.ToArray(), "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "BookInvoice.docx");
+                return File
+                (
+                    memory.ToArray(),
+                    "application/vnd" +
+                    ".openxmlformats-officedocument" +
+                    ".wordprocessingml" +
+                    ".document",
+                    "BookInvoice-" +
+                    dateTime +
+                    ".docx"
+                );
             }
         }
 
         // POST api/values
         [HttpPost]
-        public void Post([FromBody] BookDataProperty prop)
+        public void Post([FromQuery] BookDataProperty prop)
         {
             try
             {

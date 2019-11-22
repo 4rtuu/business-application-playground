@@ -1,6 +1,6 @@
 ﻿using BookStore.BackOffice.WebApi.Models;
 
-namespace BookStore.BackOffice.WebApi.BookStoreProperties
+namespace BookStore.BackOffice.WebApi.BookStorePropertiesDto
 {
     public interface IBookDataProperty
     {

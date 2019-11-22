@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using BookStore.BackOffice.WebApi.BookStoreProperties;
+﻿using System.Linq;
+using BookStore.BackOffice.WebApi.BookStorePropertiesDto;
 using BookStore.BackOffice.WebApi.Models;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -10,23 +9,25 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
     public class DocumentTable
     {
         private readonly BookStoreDbContext context;
-        private IPropertiesOfDataToInsert propertiesToInsert;
+        private IPropertiesOfData data;
 
-        public DocumentTable(BookStoreDbContext context, IPropertiesOfDataToInsert propertiesToInsert)
+        public DocumentTable(BookStoreDbContext context, IPropertiesOfData data)
         {
             this.context = context;
-            this.propertiesToInsert = propertiesToInsert;
+            this.data = data;
         }
 
         public Table TableSetup()
         {
             var table = SetupTableProperties();
 
+            var test = data.BooksWithAuthorList;
+
             // not to count context.. build and use of "BuildBookListBasedOnCondition()" returned count
-            propertiesToInsert.Data = new string
+            data.Data = new string
                 [
-                    propertiesToInsert.HeaderTitle.Count,
-                    context.Books.Count() + 1
+                    data.HeaderTitle.Count,
+                    data.BooksWithAuthorList.Count + 1
                 ];
 
             //populate header section
@@ -46,15 +47,15 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
             {
                 var row = new TableRow();
 
-                for (int i = 0; i < propertiesToInsert.HeaderTitle.Count; i++)
+                for (int i = 0; i < data.HeaderTitle.Count; i++)
                 {
                     var cell = new TableCell();
-
+                    
                     cell.Append(
                         new Paragraph(
                             new Run(
                                 new Text(
-                                    propertiesToInsert.Data[i, j]
+                                    data.Data[i, j]
                     ))));
 
                     row.Append(cell);
@@ -65,18 +66,11 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
             return table;
         }
 
-        private int BuildBookListBasedOnCondition()
-        {
-            // build a new property list of books to return based on conditional criteria
-            // return the list.count to build data property
-            return 0;
-        }
-
         private void BuildDataHeader()
         {
-            for (int i = 0; i < propertiesToInsert.HeaderTitle.Count; i++)
+            for (int i = 0; i < data.HeaderTitle.Count; i++)
             {
-                propertiesToInsert.Data[i, 0] = propertiesToInsert.HeaderTitle.ElementAt(i).Key;
+                data.Data[i, 0] = data.HeaderTitle.ElementAt(i).Key;
             }
         }
 
@@ -84,50 +78,51 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
         {
             context.Authors.ToList();
 
-            for (int posX = 0; posX < propertiesToInsert.HeaderTitle.Count; posX++)
+            for (int posX = 0; posX < data.HeaderTitle.Count; posX++)
             {
                 var bookId = 0;
 
-                for (int posY = 0; posY < context.Books.Count() + 1; posY++)
+                for (int posY = 0; posY < data.BooksWithAuthorList.Count + 1; posY++)
                 {
                     // sort conditional "BuildBookListBasedOnCondition()"
                     // count failure need to check count based on the condition criteria aswell otherwise loops for ever and either
                     // way would produce a table of empty rows because some books are skipped because of the given criteria
                     var sortCondition = context.Books.All(a => a.IsBestSeller == true);
 
+                    // !!! Dto
                     var tblRep = context.Books.Where(x => x.Id == bookId).FirstOrDefault();
 
                     bookId++;
 
-                    if (tblRep == null && posY - 1 > 0)
+                    if (data.BooksWithAuthorList == null && posY - 1 > 0)
                     {
                         posY -= 1;
 
                         continue;
                     }
-                    else if (tblRep == null && posY - 1 <= 0)
+                    else if (data.BooksWithAuthorList == null && posY - 1 <= 0)
                     {
                         posY = 0;
 
                         continue;
                     }
 
-                    var value = tblRep.GetType()
+                    var value = data.BooksWithAuthorList.GetType()
                         .GetProperties()
-                            .Where(a => a.Name == propertiesToInsert.HeaderTitle.ElementAt(posX).Value)
-                                .Select(b => b.GetValue(tblRep, null))
+                            .Where(a => a.Name == data.HeaderTitle.ElementAt(posX).Value)
+                                .Select(b => b.GetValue(data.BooksWithAuthorList, null))
                                     .FirstOrDefault();
 
-                    var author = propertiesToInsert.HeaderTitle.ElementAt(posX).Value.ToLower();
+                    var author = data.HeaderTitle.ElementAt(posX).Value.ToLower();
 
-                    if (value != null && propertiesToInsert.HeaderTitle.ElementAt(posX).Value.ToLower() == "author")
-                        value = tblRep.Author.Firstname + " " + tblRep.Author.Lastname;
+                    if (value != null && data.HeaderTitle.ElementAt(posX).Value.ToLower() == "author")
+                        value = data.BooksWithAuthorList.Firstname + " " + data.BooksWithAuthorList..Lastname;
 
                     // Avoid broken doc in case the value is null
                     if (value == null)
                         value = "null";
 
-                    propertiesToInsert.Data[posX, posY] = value.ToString();
+                    data.Data[posX, posY] = value.ToString();
                 }
             }
         }
@@ -143,40 +138,26 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
             var val = new EnumValue<BorderValues>(BorderValues.Single);
             var size = (UInt32Value)12;
 
-            var props = new TableProperties(
-                new TableBorders(
-                    new TopBorder
-                    {
-                        Val = val,
-                        Size = size
-                    },
-                    new BottomBorder
-                    {
-                        Val = val,
-                        Size = size
-                    },
-                    new LeftBorder
-                    {
-                        Val = val,
-                        Size = size
-                    },
-                    new RightBorder
-                    {
-                        Val = val,
-                        Size = size
-                    },
-                    new InsideHorizontalBorder
-                    {
-                        Val = val,
-                        Size = size
-                    },
-                    new InsideVerticalBorder
-                    {
-                        Val = val,
-                        Size = size
-                    }
-                )
+            var insideVert = new InsideVerticalBorder { Val = val, Size = size };
+
+            var insideHoriz = new InsideHorizontalBorder { Val = val, Size = size };
+
+            var right = new RightBorder { Val = val, Size = size };
+
+            var left = new LeftBorder { Val = val, Size = size };
+
+            var bottom = new BottomBorder { Val = val, Size = size };
+
+            var top = new TopBorder { Val = val, Size = size };
+
+            var tableBorders = new TableBorders(
+                top, bottom, 
+                left, right, 
+                insideHoriz, 
+                insideVert
             );
+
+            var props = new TableProperties(tableBorders);
 
             props.Append(tableWidth);
 

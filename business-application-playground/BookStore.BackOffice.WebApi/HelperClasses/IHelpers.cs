@@ -1,7 +1,12 @@
-﻿namespace BookStore.BackOffice.WebApi.HelperClasses
+﻿using System;
+using System.Globalization;
+using BookStore.BackOffice.WebApi.Models;
+
+namespace BookStore.BackOffice.WebApi.HelperClasses
 {
     public interface IHelpers
     {
-        void ToDictionary(string[] headerTitles);
+        bool ArrayIsNullOrEmpty(Array array);
+        TextInfo SetCultureInfo();
     }
 }

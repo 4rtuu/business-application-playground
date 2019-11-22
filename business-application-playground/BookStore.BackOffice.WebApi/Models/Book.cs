@@ -2,7 +2,13 @@
 {
     public class Book
     {
+        /// <summary>
+        /// This is ID
+        /// </summary>
         public int Id { get; set; }
+        /// <summary>
+        /// This is Title
+        /// </summary>
         public string Title { get; set; }
         public string ShortDescription { get; set; }
         public int PublicationYear { get; set; }
