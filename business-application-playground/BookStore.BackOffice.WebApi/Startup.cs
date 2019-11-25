@@ -24,6 +24,7 @@ namespace BookStore.BackOffice.WebApi
 
         public IConfiguration Configuration { get; }
 
+        [Obsolete]
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);

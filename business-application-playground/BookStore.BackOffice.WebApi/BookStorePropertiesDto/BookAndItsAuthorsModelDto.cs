@@ -1,31 +1,32 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace BookStore.BackOffice.WebApi.BookStorePropertiesDto
 {
     public class BookAndItsAuthorsModelDto : IBookAndItsAuthorsModelDto
     {
-        [DisplayName("Name")]
+        [Display(Name = "Name", Description = "Name of author")]
         public string Firstname { get; set; }
 
-        [DisplayName("Surname")]
+        [Display(Name = "Surname", Description = "Last name of author")]
         public string Lastname { get; set; }
 
-        [DisplayName("Title")]
+        [Display(Name = "Title", Description = "Title of the book")]
         public string Title { get; set; }
 
-        [DisplayName("Description")]
+        [Display(Name = "Description", Description = "Description of the book")]
         public string ShortDescription { get; set; }
 
-        [DisplayName("Year Published")]
+        [Display(Name = "Year Published", Description = "Year book was published")]
         public int PublicationYear { get; set; }
 
-        [DisplayName("Price")]
+        [Display(Name = "Price", Description = "Price of the book")]
         public decimal Price { get; set; }
 
-        [DisplayName("Availability")]
+        [Display(Name = "Availability", Description = "Is book available")]
         public int AvailableStock { get; set; }
 
-        [DisplayName("Best Seller")]
+        [Display(Name = "Best Seller", Description = "Is book a best seller")]
         public bool IsBestSeller { get; set; }
     }
 }

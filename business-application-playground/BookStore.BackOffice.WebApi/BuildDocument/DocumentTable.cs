@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using BookStore.BackOffice.WebApi.BookStorePropertiesDto;
 using BookStore.BackOffice.WebApi.Models;
 using DocumentFormat.OpenXml;
@@ -8,12 +9,10 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
 {
     public class DocumentTable
     {
-        private readonly BookStoreDbContext context;
         private IPropertiesOfData data;
 
-        public DocumentTable(BookStoreDbContext context, IPropertiesOfData data)
+        public DocumentTable(IPropertiesOfData data)
         {
-            this.context = context;
             this.data = data;
         }
 
@@ -21,9 +20,6 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
         {
             var table = SetupTableProperties();
 
-            var test = data.BooksWithAuthorList;
-
-            // not to count context.. build and use of "BuildBookListBasedOnCondition()" returned count
             data.Data = new string
                 [
                     data.HeaderTitle.Count,
@@ -43,7 +39,7 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
 
         private Table DrawMatrix(Table table)
         {
-            for (int j = 0; j < context.Books.Count() + 1; j++)
+            for (int j = 0; j < data.BooksWithAuthorList.Count + 1; j++)
             {
                 var row = new TableRow();
 
@@ -76,54 +72,59 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
 
         private void BuildDataBody()
         {
-            context.Authors.ToList();
-
             for (int posX = 0; posX < data.HeaderTitle.Count; posX++)
             {
-                var bookId = 0;
-
-                for (int posY = 0; posY < data.BooksWithAuthorList.Count + 1; posY++)
+                for (int posY = 0; posY < data.BooksWithAuthorList.Count; posY++)
                 {
-                    // sort conditional "BuildBookListBasedOnCondition()"
-                    // count failure need to check count based on the condition criteria aswell otherwise loops for ever and either
-                    // way would produce a table of empty rows because some books are skipped because of the given criteria
-                    var sortCondition = context.Books.All(a => a.IsBestSeller == true);
+                    var tblValue = data.BooksWithAuthorList[posY];
 
-                    // !!! Dto
-                    var tblRep = context.Books.Where(x => x.Id == bookId).FirstOrDefault();
+                    var element = data.HeaderTitle.ElementAt(posX).Value.ToLower();
 
-                    bookId++;
+                    var bookVal = MockDataOfCell(tblValue, element);
 
-                    if (data.BooksWithAuthorList == null && posY - 1 > 0)
-                    {
-                        posY -= 1;
-
-                        continue;
-                    }
-                    else if (data.BooksWithAuthorList == null && posY - 1 <= 0)
-                    {
-                        posY = 0;
-
-                        continue;
-                    }
-
-                    var value = data.BooksWithAuthorList.GetType()
-                        .GetProperties()
-                            .Where(a => a.Name == data.HeaderTitle.ElementAt(posX).Value)
-                                .Select(b => b.GetValue(data.BooksWithAuthorList, null))
-                                    .FirstOrDefault();
-
-                    var author = data.HeaderTitle.ElementAt(posX).Value.ToLower();
-
-                    if (value != null && data.HeaderTitle.ElementAt(posX).Value.ToLower() == "author")
-                        value = data.BooksWithAuthorList.Firstname + " " + data.BooksWithAuthorList..Lastname;
-
-                    // Avoid broken doc in case the value is null
-                    if (value == null)
-                        value = "null";
-
-                    data.Data[posX, posY] = value.ToString();
+                    data.Data[posX, posY+1] = bookVal;
                 }
+            }
+        }
+
+        // TODO: move this to document sorting related stuff
+        private string MockDataOfCell(BookAndItsAuthorsModelDto book, string element)
+        {
+            switch (element)
+            {
+                case "title":
+                    return book.Title;
+
+                case "author":
+                    return book.Firstname + " " + book.Lastname;
+
+                case "price":
+                    return "€ " + book.Price;
+
+                case "isbestseller":
+
+                    if (book.IsBestSeller)
+                    {
+                        return "Bestseller";
+                    }
+                    else
+                    {
+                        return "Not Bestseller";
+                    }
+
+                case "availablestock":
+
+                    if (book.AvailableStock <= 0)
+                    {
+                        return "Not available in stock";
+                    }
+                    else
+                    {
+                        return "Available in stock (" + book.AvailableStock + ")";
+                    }
+
+                default:
+                    throw new ArgumentNullException(Constants.ArgumentDataSourceNullErr);
             }
         }
 

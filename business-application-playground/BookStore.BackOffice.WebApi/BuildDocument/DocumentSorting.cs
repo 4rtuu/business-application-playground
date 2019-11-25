@@ -19,7 +19,7 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
 
         public void ConditionalFiltering(FilterModelDto filter)
         {
-            var response = Validate(filter);
+            var response = Validate();
 
             if (response == false)
                 return;
@@ -33,11 +33,8 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
             MapToDto(books);
         }
 
-        private bool Validate(FilterModelDto filter)
+        private bool Validate()
         {
-            if (string.IsNullOrWhiteSpace(filter.FilterBy))
-                return false;
-
             var any = context.Books.Any();
 
             if (any == false)
@@ -104,7 +101,7 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
 
         private List<Book> GetAnyBookOfAuthor(FilterModelDto filter)
         {
-            if (filter.FilterByValue <= 0) 
+            if (filter.FilterByValue <= 0 || string.IsNullOrWhiteSpace(filter.FilterBy)) 
                 return context.Books.Select(x => x).ToList();
 
             return null;

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using BookStore.BackOffice.WebApi.BookStorePropertiesDto;
@@ -66,12 +66,12 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
 
             foreach (var property in bookModelDto.GetType().GetProperties())
             {
-                var val = property.GetCustomAttributesData().Any(a => a.AttributeType.Name == "DisplayNameAttribute");
+                var val = property.GetCustomAttributesData().Any(a => a.AttributeType.Name == "DisplayAttribute");
 
                 if (val == false)
                     continue;
 
-                var attrName = property.GetCustomAttribute<DisplayNameAttribute>().DisplayName;
+                var attrName = property.GetCustomAttribute<DisplayAttribute>().Name;
 
                 if (attrName.ToString() != key)
                     continue;
