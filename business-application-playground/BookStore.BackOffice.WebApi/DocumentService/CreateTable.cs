@@ -1,49 +1,54 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BookStore.BackOffice.WebApi.BookStorePropertiesDto;
 using BookStore.BackOffice.WebApi.Models;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 
-namespace BookStore.BackOffice.WebApi.BuildDocument
+namespace BookStore.BackOffice.WebApi.DocumentMapper
 {
-    public class DocumentTable
+    public class CreateTable
     {
-        private IPropertiesOfData data;
+		private IDocumentDtoMapper docMapper;
+		private CreateDictionaryOfTitles dictOfTitles;
 
-        public DocumentTable(IPropertiesOfData data)
+		public CreateTable(CreateDictionaryOfTitles dictOfTitles, IDocumentDtoMapper docMapper)
+		{
+			this.dictOfTitles = dictOfTitles;
+			this.docMapper = docMapper;
+		}
+
+        public Table Table(FilterModelDto filter)
         {
-            this.data = data;
-        }
+			var headerData = dictOfTitles.MapTitles(filter);
 
-        public Table TableSetup()
-        {
-            var table = SetupTableProperties();
+			var bodyData = docMapper.MapToDto(filter);
 
-            data.Data = new string
+			var table = SetupTableProperties();
+
+            var matrix = new string
                 [
-                    data.HeaderTitle.Count,
-                    data.BooksWithAuthorList.Count + 1
+					headerData.Count,
+                    bodyData.Count + 2
                 ];
 
-            //populate header section
-            BuildDataHeader();
+            matrix = BuildDataHeader(matrix, headerData);
 
-            //populate body section
-            BuildDataBody();
+			matrix = BuildDataBody(matrix, bodyData, headerData);
 
-            table = DrawMatrix(table);
+            table = DrawMatrix(table, matrix, bodyData, headerData);
 
             return table;
         }
 
-        private Table DrawMatrix(Table table)
+        private Table DrawMatrix(Table table, string[,] matrix, List<BookAndItsAuthorsModelDto> bodyData, Dictionary<string, string> headerData)
         {
-            for (int j = 0; j < data.BooksWithAuthorList.Count + 1; j++)
+            for (int j = 0; j <= bodyData.Count + 1; j++)
             {
                 var row = new TableRow();
 
-                for (int i = 0; i < data.HeaderTitle.Count; i++)
+                for (int i = 0; i < headerData.Count; i++)
                 {
                     var cell = new TableCell();
                     
@@ -51,7 +56,7 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
                         new Paragraph(
                             new Run(
                                 new Text(
-                                    data.Data[i, j]
+									matrix[i, j]
                     ))));
 
                     row.Append(cell);
@@ -62,29 +67,34 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
             return table;
         }
 
-        private void BuildDataHeader()
+        private string[,] BuildDataHeader(string[,] matrix, Dictionary<string, string> headerData)
         {
-            for (int i = 0; i < data.HeaderTitle.Count; i++)
+            for (int i = 0; i < headerData.Count; i++)
             {
-                data.Data[i, 0] = data.HeaderTitle.ElementAt(i).Key;
+				matrix[i, 0] = headerData.ElementAt(i).Key;
             }
+
+			return matrix;
         }
 
-        private void BuildDataBody()
+        private string[,] BuildDataBody(string[,] matrix, List<BookAndItsAuthorsModelDto> bodyData, Dictionary<string, string> headerData)
         {
-            for (int posX = 0; posX < data.HeaderTitle.Count; posX++)
+            for (int posX = 0; posX < headerData.Count; posX++)
             {
-                for (int posY = 0; posY < data.BooksWithAuthorList.Count; posY++)
+                for (int posY = 0; posY < bodyData.Count; posY++)
                 {
-                    var tblValue = data.BooksWithAuthorList[posY];
 
-                    var element = data.HeaderTitle.ElementAt(posX).Value.ToLower();
+					var tblValue = bodyData[posY];
+
+					var element = headerData.ElementAt(posX).Value.ToLower();
 
                     var bookVal = MockDataOfCell(tblValue, element);
 
-                    data.Data[posX, posY+1] = bookVal;
+					matrix[posX, posY + 1] = bookVal;
                 }
             }
+
+			return matrix;
         }
 
         // TODO: move this to document sorting related stuff
@@ -93,7 +103,7 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
             switch (element)
             {
                 case "title":
-                    return book.Title;
+					return book.Title + " (" + book.PublicationYear + ")";
 
                 case "author":
                     return book.Firstname + " " + book.Lastname;
@@ -104,24 +114,18 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
                 case "isbestseller":
 
                     if (book.IsBestSeller)
-                    {
                         return "Bestseller";
-                    }
+
                     else
-                    {
                         return "Not Bestseller";
-                    }
 
                 case "availablestock":
 
                     if (book.AvailableStock <= 0)
-                    {
                         return "Not available in stock";
-                    }
+
                     else
-                    {
                         return "Available in stock (" + book.AvailableStock + ")";
-                    }
 
                 default:
                     throw new ArgumentNullException(Constants.ArgumentDataSourceNullErr);

@@ -1,8 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
-using BookStore.BackOffice.WebApi.BookStorePropertiesDto;
-using BookStore.BackOffice.WebApi.BuildDocument;
+using BookStore.BackOffice.WebApi.DocumentMapper;
 using BookStore.BackOffice.WebApi.HelperClasses;
 using BookStore.BackOffice.WebApi.Models;
 using Microsoft.AspNetCore.Builder;
@@ -12,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using BookStore.BackOffice.WebApi.Factory;
 
 namespace BookStore.BackOffice.WebApi
 {
@@ -31,14 +31,14 @@ namespace BookStore.BackOffice.WebApi
 
             services.AddDbContext<BookStoreDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("BookStoreDb")));
 
-            services.AddSingleton<IBookDataProperty, BookDataProperty>();
-            services.AddScoped<IPropertiesOfData, PropertiesOfData>();
             services.AddScoped<IHelpers, Helpers>();
-            services.AddScoped<DocumentData>();
-            services.AddScoped<DocumentProperties>();
-            services.AddScoped<DocumentTable>();
-            services.AddScoped<DocumentSorting>();
-            services.AddScoped<FilterModelDto>();
+            services.AddScoped<CreateDictionaryOfTitles>();
+            services.AddScoped<CreateTable>();
+            services.AddScoped<IDocumentDtoMapper, DocumentDtoMapper>();
+			services.AddScoped<IDataFilterFactory, DataFilterFactory>();
+			services.AddScoped<ICreateFile_Docx, CreateFile_Docx>();
+			services.AddScoped<ICreateFile_Pdf, CreateFile_Pdf>();
+			services.AddScoped<IDocumentTypeFactory, DocumentTypeFactory>();
 
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>

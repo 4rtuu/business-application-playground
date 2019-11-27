@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
@@ -6,32 +7,22 @@ using BookStore.BackOffice.WebApi.BookStorePropertiesDto;
 using BookStore.BackOffice.WebApi.HelperClasses;
 using BookStore.BackOffice.WebApi.Models;
 
-namespace BookStore.BackOffice.WebApi.BuildDocument
+namespace BookStore.BackOffice.WebApi.DocumentMapper
 {
-    public class DocumentData
-    {
-        private IPropertiesOfData propertiesToInsert;
+	public class CreateDictionaryOfTitles
+	{
         private IHelpers helper;
 
-        public DocumentData(IPropertiesOfData propertiesToInsert, IHelpers helper)
+		public CreateDictionaryOfTitles(IHelpers helper)
         {
-            this.propertiesToInsert = propertiesToInsert;
             this.helper = helper;
         }
 
-        public void ToDictionary(string[] values)
+        public Dictionary<string, string> MapTitles(FilterModelDto filter)
         {
-            if (propertiesToInsert == null)
-            {
-                throw new NullReferenceException(Constants.NullReferenceErr);
-            }
+			var dictForHeader = new Dictionary<string, string>();
 
-            MapTitles(values);
-        }
-
-        private void MapTitles(string[] values)
-        {
-            values = SetValueToColumnTitles(values);
+			var values = SetValueToColumnTitles(filter.Titles);
 
             var textInfo = helper.SetCultureInfo();
 
@@ -44,7 +35,7 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
 
                 if (keyName == "author")
                 {
-                    propertiesToInsert.HeaderTitle.Add(keyName, textInfo.ToTitleCase(keyName));
+					dictForHeader.Add(keyName, textInfo.ToTitleCase(keyName));
 
                     continue;
                 }
@@ -56,9 +47,12 @@ namespace BookStore.BackOffice.WebApi.BuildDocument
                 if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentException(Constants.ArgumentEmptyTitleErr);
 
-                propertiesToInsert.HeaderTitle.Add(keyName, value);
+				dictForHeader.Add(keyName, value);
             }
-        }
+
+			return dictForHeader;
+
+		}
 
         private string GetPropertyName(string key)
         {

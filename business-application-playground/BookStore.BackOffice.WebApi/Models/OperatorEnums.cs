@@ -2,10 +2,10 @@
 {
     public enum Operator
     {
-        GreaterThan,
-        GreaterThanOrEqual,
-        LessThan,
-        LessThanOrEqual,
-        Equal
+        GreaterThan = 1,
+        GreaterThanOrEqual = 2,
+        LessThan = 3,
+        LessThanOrEqual = 4,
+        Equal = 5
     }
 }
