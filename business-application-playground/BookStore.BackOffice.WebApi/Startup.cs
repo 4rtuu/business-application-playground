@@ -2,7 +2,6 @@
 using System.IO;
 using System.Reflection;
 using BookStore.BackOffice.WebApi.DocumentMapper;
-using BookStore.BackOffice.WebApi.HelperClasses;
 using BookStore.BackOffice.WebApi.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -12,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using BookStore.BackOffice.WebApi.Factory;
+using BookStore.BackOffice.WebApi.DocumentService;
 
 namespace BookStore.BackOffice.WebApi
 {
@@ -31,11 +31,9 @@ namespace BookStore.BackOffice.WebApi
 
             services.AddDbContext<BookStoreDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("BookStoreDb")));
 
-            services.AddScoped<IHelpers, Helpers>();
-            services.AddScoped<CreateDictionaryOfTitles>();
-            services.AddScoped<CreateTable>();
+            services.AddScoped<ICreateTable, CreateTable>();
             services.AddScoped<IDocumentDtoMapper, DocumentDtoMapper>();
-			services.AddScoped<IDataFilterFactory, DataFilterFactory>();
+			services.AddScoped<IDataFilter, DataFilter>();
 			services.AddScoped<ICreateFile_Docx, CreateFile_Docx>();
 			services.AddScoped<ICreateFile_Pdf, CreateFile_Pdf>();
 			services.AddScoped<IDocumentTypeFactory, DocumentTypeFactory>();
@@ -45,8 +43,8 @@ namespace BookStore.BackOffice.WebApi
             {
                 c.SwaggerDoc("v1", new OpenApiInfo 
                 { 
-                    Title = "My API", 
-                    Version = "v1" 
+                    Title = "Generate report API", 
+                    Version = "v999" 
                 });
 
                 // Set the comments path for the Swagger JSON and UI.
@@ -67,7 +65,7 @@ namespace BookStore.BackOffice.WebApi
             // specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Generate report API V999");
                 c.RoutePrefix = string.Empty;
             });
 

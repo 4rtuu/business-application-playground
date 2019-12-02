@@ -13,9 +13,6 @@ namespace BookStore.BackOffice.WebApi.BookStorePropertiesDto
         [Display(Name = "Title", Description = "Title of the book")]
         public string Title { get; set; }
 
-        [Display(Name = "Description", Description = "Description of the book")]
-        public string ShortDescription { get; set; }
-
         [Display(Name = "Year Published", Description = "Year book was published")]
         public int PublicationYear { get; set; }
 

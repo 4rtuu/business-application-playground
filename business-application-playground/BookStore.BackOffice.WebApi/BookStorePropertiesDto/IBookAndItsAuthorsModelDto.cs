@@ -8,7 +8,6 @@
         bool IsBestSeller { get; set; }
         decimal Price { get; set; }
         string Title { get; set; }
-        string ShortDescription { get; set; }
         int PublicationYear { get; set; }
     }
 }

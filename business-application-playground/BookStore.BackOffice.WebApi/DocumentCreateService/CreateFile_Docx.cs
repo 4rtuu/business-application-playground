@@ -8,9 +8,9 @@ namespace BookStore.BackOffice.WebApi.DocumentMapper
 {
     public class CreateFile_Docx : ICreateFile_Docx
 	{
-        private CreateTable docTable;
+        private ICreateTable docTable;
 
-		public CreateFile_Docx(CreateTable docTable)
+		public CreateFile_Docx(ICreateTable docTable)
         {
 			this.docTable = docTable;
 		}
@@ -26,11 +26,11 @@ namespace BookStore.BackOffice.WebApi.DocumentMapper
 					 )
 				)
 				{
-					var doc = GetDocument(filter);
-
 					document.AddMainDocumentPart();
 
-					document.MainDocumentPart.Document = doc;
+                    var doc = GetDocument(filter);
+
+                    document.MainDocumentPart.Document = doc;
 
 					document.Close();
 				}
@@ -42,7 +42,7 @@ namespace BookStore.BackOffice.WebApi.DocumentMapper
 		private Document GetDocument(FilterModelDto filter)
 		{
 			var paragraphProperties = ParagraphSetup();
-			var rdyTable = docTable.Table(filter);
+			var rdyTable = docTable.GetTable(filter);
 
 			var body = new Body();
 			body.Append(paragraphProperties);
@@ -64,21 +64,27 @@ namespace BookStore.BackOffice.WebApi.DocumentMapper
             paragraphProperties.Append(justification);
             paragraphProperties.Append(paragraphMarkRunProperties);
 
-            var run = new Run();
+			var bold = new Bold();
+			var fontSize = new FontSize();
+			var runPara = new RunProperties();
+			var run = new Run();
             var text = new Text();
 
-            // some rand text as Main Title
-            text.Text = "Book Invoice";
+			fontSize.Val = "36";
+			//some rand text as Main Title
+			text.Text = "Book Report\n";
 
-            run.Append(new RunProperties());
-            run.Append(text);
+			runPara.Append(bold);
+			runPara.Append(fontSize);
+			run.Append(runPara);
+			run.Append(text);
 
             var paragraph = new Paragraph();
 
             paragraph.Append(paragraphProperties);
-            paragraph.Append(run);
+			paragraph.Append(run);
 
-            return paragraph;
+			return paragraph;
         }
     }
 }

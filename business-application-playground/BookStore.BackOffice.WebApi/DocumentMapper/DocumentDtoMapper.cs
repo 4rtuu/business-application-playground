@@ -1,24 +1,29 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using BookStore.BackOffice.WebApi.BookStorePropertiesDto;
-using BookStore.BackOffice.WebApi.Factory;
+using BookStore.BackOffice.WebApi.DocumentService;
 using BookStore.BackOffice.WebApi.Models;
 
 namespace BookStore.BackOffice.WebApi.DocumentMapper
 {
 	public class DocumentDtoMapper : IDocumentDtoMapper
 	{
-		private IDataFilterFactory filterFactory;
+		private IDataFilter filter;
 
-		public DocumentDtoMapper(IDataFilterFactory filterFactory)
+		public DocumentDtoMapper(IDataFilter filter)
 		{
-			this.filterFactory = filterFactory;
+			this.filter = filter;
 		}
 
-		public List<BookAndItsAuthorsModelDto> MapToDto(FilterModelDto filter)
+		public List<BookAndItsAuthorsModelDto> MapToDto(FilterModelDto filterer)
 		{
-			var books = filterFactory.GetFilteredResults(filter);
+			var books = filter.GetFilteredResults(filterer);
 
-			var dtoList = new List<BookAndItsAuthorsModelDto>();
+            if (books.Any() == false)
+                throw new InvalidOperationException(Constants.InvalidListErr);
+
+            var dtoList = new List<BookAndItsAuthorsModelDto>();
 
 			foreach (var book in books)
 			{
@@ -30,6 +35,7 @@ namespace BookStore.BackOffice.WebApi.DocumentMapper
 
 		private BookAndItsAuthorsModelDto BuildDtoOfBook(Book book)
 		{
+
 			return new BookAndItsAuthorsModelDto()
 			{
 				Title = book.Title,
